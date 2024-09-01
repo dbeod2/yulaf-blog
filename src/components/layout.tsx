@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Link, useStaticQuery, graphql } from 'gatsby'
 import * as styles from './layout.module.css'
+import { defineCustomElements as deckDeckGoHighlightElement } from "@deckdeckgo/highlight-code/dist/loader";
 
 const Layout = (props) => {
     const { pageTitle, children } = props;
@@ -13,7 +14,7 @@ const Layout = (props) => {
           }
         }
       `)
-
+    deckDeckGoHighlightElement();
     return (
         <>
             <div className={styles.navigationBar}>
