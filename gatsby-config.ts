@@ -25,6 +25,14 @@ const config: GatsbyConfig = {
       __key: "blog"
     },
     {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: "images",
+        path: `./blog/images`,
+      },
+      __key:"images"
+    },
+    {
       resolve: 'gatsby-transformer-remark',
     },
     "gatsby-plugin-mdx",

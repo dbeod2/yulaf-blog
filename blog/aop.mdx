@@ -1,0 +1,54 @@
+---
+title: "AOP @Aspect 사용법"
+date: "2022-02-11"
+slug: "aop"
+---
+
+Aspect란? 
+
+- 객체지향 모듈을 오브젝트라 부르는것과 비슷하게 **부가기능 모듈을 애스펙트**라고 부르며, 핵심기능에 부가되어 의미를 갖는 특별한 모듈이다.
+- 부가될 기능을 정의한 **어드바이스와** 어드바이스를 **어디에 적용할지 결정하는 포인트컷**을 함께 갖고있다.
+
+예를 들면, 로깅, 트랜잭션 많이 사용되고 있으며 스프링에서 사용되는 어노테이션은 AOP기반이다. 
+
+테스트를 위해 설정과 코드를 작성해다. 
+
+```java
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+```
+
+```java
+@Aspect
+public class Performance {
+
+    @Pointcut("execution(* com.u.aop.board.BoardService.findAll(..))")
+    public void getBoards(){}
+
+    @Pointcut("execution(* com.u.aop.user.UserService.findAll(..))")
+    public void getUsers(){}
+
+    @Around("getBoards() || getUsers()")
+    public Object calculatePerformance(ProceedingJoinPoint joinPoint) {
+        Object result = null;
+        try {
+            long start = System.currentTimeMillis();
+            result = joinPoint.proceed();
+            long end = System.currentTimeMillis();
+
+            System.out.println("수행시간 : " + (end - start));
+        } catch (Throwable throwable) {
+            System.out.println("exception! ");
+        }
+
+        return result;
+    }
+}
+```
+
+advice는 @Aspect 클래스에서 사용하는 내부 메소드를 말하며, **애스팩트가 ‘무엇’을 ‘언제’할지를 정의한다.**
+
+pointcut은 advice를 **적용할 조인포인트를 선별하는 기능을 정의한 모듈이다.**
+
+joinpoint는 advice가 적용될 수 있는 위치를 말한다.  
+
+https://jojoldu.tistory.com/69 ← 참고한 블로그! 너무 잘정리되어있다.

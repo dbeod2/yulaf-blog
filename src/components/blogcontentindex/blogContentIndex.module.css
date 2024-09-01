@@ -1,15 +1,14 @@
 .list {
     margin: 0;
-    display: flex;
 }
 
 .list .listItem {
     list-style: none;
-    margin-left: 10px;
+    margin-top: 10px;
 }
 
 .list .listItem:first-child {
-    margin-left: 0;
+    margin-top: 0;
 }
 
 .postList{
