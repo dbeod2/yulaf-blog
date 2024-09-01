@@ -1,14 +1,9 @@
 import * as React from 'react'
 import { Link, useStaticQuery, graphql } from 'gatsby'
-import {
-    container,
-    heading,
-    navLinks,
-    navLinkItem,
-    navLinkText
-  } from './layout.module.css'
+import * as styles from './layout.module.css'
 
-  const Layout = ({ pageTitle, children }) => {
+const Layout = (props) => {
+    const { pageTitle, children } = props;
     const data = useStaticQuery(graphql`
         query {
           site {
@@ -20,33 +15,23 @@ import {
       `)
 
     return (
-      <div className={container}>
-        <nav>
-          <ul className={navLinks}>
-            <li className={navLinkItem}>
-              <Link to="/" className={navLinkText}>
-                Home
-              </Link>
-            </li>
-            <li className={navLinkItem}>
-              <Link to="/about" className={navLinkText}>
-                About
-              </Link>
-            </li>
-            <li className={navLinkItem}>
-            <Link to="/blog" className={navLinkText}>
-              Blog
-            </Link>
-          </li>
-          </ul>
-        </nav>
-        <main>
-          <h1 className={heading}>{pageTitle}</h1>
-          {children}
-        </main>
-        {/* <header>{data.site.siteMetadata.title}</header> */}
-      </div>
+        <>
+            <div className={styles.navigationBar}>
+                <div className={styles.container}>
+                    <a href="/" className={styles.navBrand} aria-label="home">
+                        <div className={styles.siteName}>yulaf.blog</div>
+                    </a>
+                    <nav role="navigation" className={styles.navMenu}>
+                        {/* <a href="/" aria-current="page" className={styles.navLink}>Home</a> */}
+                        {/* <a href="/blog" aria-current="page" className={styles.navLink}>Post</a> */}
+                    </nav>
+                </div>
+            </div>
+            <div>
+                {children}
+            </div>
+        </>
     )
-  }
-  
-  export default Layout
+}
+
+export default Layout

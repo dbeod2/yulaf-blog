@@ -1,20 +1,116 @@
+.navigationBar {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    background-color: #fff;
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.06);
+
+    position: relative;
+    z-index: 1000;
+}
+
 .container {
-    margin: auto;
-    max-width: 500px;
-    font-family: sans-serif;
-  }
-  
-  .heading {
-    color: rebeccapurple;
-  }
-  .nav-links {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 940px;
     display: flex;
-    list-style: none;
-    padding-left: 0;
-  }
-  .nav-link-item {
-    padding-right: 2rem;
-  }
-  .nav-link-text {
-    color: black;
-  }
+    justify-content: space-between;
+}
+
+.navBrand {
+    position: relative;
+    text-decoration: none;
+    color: #333333;
+}
+
+.siteName {
+    display: block;
+    margin-top: 11px;
+    color: #333;
+    font-size: 24px;
+    line-height: 100%;
+    text-decoration: none;
+}
+
+.navMenu {
+    position: relative;
+}
+
+.navLink {
+    margin-left: 25px;
+    padding: 15px 0px;
+    color: #aaa;
+    font-size: 14px;  
+    display: inline-block;
+}
+
+nav {
+    display: block;
+    unicode-bidi: isolate;
+}
+
+body {
+    background-color: #f0f0f0;
+    font-family: Lato, sans-serif;
+    color: #333;
+    font-size: 14px;
+    line-height: 135%;
+    margin: 0px;
+}
+
+
+p {
+    margin-top: 0px;
+    font-family: Lato, sans-serif;
+}
+
+
+h1 {
+    margin-top: 0px;
+    margin-bottom: 15px;
+    font-size: 35px;
+    line-height: 40px;
+    font-weight: 400;
+}
+
+div {
+    display: block;
+    unicode-bidi: isolate;
+}
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.profileWidth {
+    width: 25%;
+    position: relative;
+    min-height: 1px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.layoutContentWrapper {
+    padding-top: 30px;
+    padding-bottom: 50px;
+}
+
+.layoutContainer {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 940px;
+}
+
+.layoutContainerRow { 
+    margin-left: -10px;
+    margin-right: -10px;
+    display: flex;
+}
+
+.layoutBlogContentIndexWrapper {
+    width: 75%;
+    float: right;
+    padding-left: 10px;
+    padding-right: 10px;
+}

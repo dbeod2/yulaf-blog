@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { title } from './my-component.module.css'
+import { containerStyles } from './my-component.module.css'
 
 const MyComponent = () => {
   return (

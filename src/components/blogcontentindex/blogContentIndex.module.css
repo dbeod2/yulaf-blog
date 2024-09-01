@@ -1,0 +1,101 @@
+.list {
+    margin: 0;
+    display: flex;
+}
+
+.list .listItem {
+    list-style: none;
+    margin-left: 10px;
+}
+
+.list .listItem:first-child {
+    margin-left: 0;
+}
+
+.postList{
+    min-height: 1px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: space-between;
+}
+
+.postContent {
+    padding: 20px;
+}
+
+.postRow {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.postLink {
+    height: 140px;
+    display: block;
+    margin-right: 20px;
+    border-radius: 3px;
+    background-position: 50% 50%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    transition: opacity 200ms ease;
+    max-width: 100%;
+
+    box-sizing: border-box;
+}
+
+.postText {
+    position: relative;
+    float: left;
+    min-height: 1px;
+}
+
+.postTitle {
+    transition: opacity 200ms ease;
+    color: #333;
+    text-decoration: none;
+    
+    max-width: 100%;
+    display: inline-block;
+}
+
+.postTitleLink {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding: 20px;
+    font-size: 22px;
+    line-height: 26px;
+    font-weight: 400;
+}
+
+.postDetailWrapper {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.postDetailInfo {
+    display: inline-block;
+    padding-left: 20px;
+    margin-right: 8px;
+    color: #aaa;
+    font-size: 10px;
+    line-height: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.postDtailTitle {
+    padding-left: 20px;
+    color: #aaa;
+    font-size: 14px;
+    line-height: 22px;
+
+    margin-top: 0px;
+    margin-bottom: 20px;
+    font-family: Lato, sans-serif;
+}
+
+.boxSizing {
+    box-sizing: border-box;
+}
+

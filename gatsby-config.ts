@@ -3,13 +3,11 @@ import type { GatsbyConfig } from "gatsby";
 const config: GatsbyConfig = {
   siteMetadata: {
     title: `yulaf-blog`,
-    plugins: [
-      "gatsby-plugin-image",
-      "gatsby-plugin-sharp",
-    ],
   },
   graphqlTypegen: true,
   plugins: [
+    "gatsby-plugin-image",
+    "gatsby-plugin-sharp",
     {
       resolve: 'gatsby-source-filesystem',
       options: {
@@ -17,7 +15,7 @@ const config: GatsbyConfig = {
         "path": "./src/pages/"
       },
       __key: "pages"
-    }, 
+    },
     {
       resolve: 'gatsby-source-filesystem',
       options: {

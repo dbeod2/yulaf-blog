@@ -1,0 +1,73 @@
+.whiteWrapper {
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+    box-sizing: border-box;
+}
+
+.siteDescription {
+    font-size: 15px;
+    margin-bottom: 20px;
+    line-height: 145%;
+    text-align: left;
+}
+
+.featurePostsList {
+    margin-bottom: -15px;
+}
+
+.greyRule {
+    width: 100%;
+    height: 1px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    background-color: #c7c7c7;
+}
+
+.circleProfile {
+    display: block;
+    width: 70%;
+    margin-right: auto;
+    margin-bottom: 28px;
+    margin-left: auto;
+    border-radius: 500px;
+}
+
+.github {
+    margin-bottom: 0px;
+    color: #aaa;
+    font-size: 10px;
+    text-align: left;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.githubLink {
+    color: #aaa;
+    text-decoration: none;
+}
+
+.smallHeading {
+    margin-top: 0px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    line-height: 135%;
+    text-align: left;
+
+    font-weight: 400;
+}
+
+.featurePostsList {
+    margin-bottom: -15px;
+}
+
+.smallPostLink {
+    margin-bottom: -15px;
+    font-size: 12px;
+    display: inline-block;
+    margin-bottom: 15px;
+    color: #aaa;
+    text-align: left;
+    text-decoration: none;
+}

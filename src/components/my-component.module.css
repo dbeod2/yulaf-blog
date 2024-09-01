@@ -1,4 +1,9 @@
 .title {
-    color: blue;
+    color: black;
     font-size: 3rem;
-  }
+}
+
+.container {
+    margin: 3rem auto;
+    max-width: 600px;
+}
