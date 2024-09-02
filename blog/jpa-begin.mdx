@@ -1,0 +1,119 @@
+---
+title: "JPA 시작하기"
+date: "2022-11-20"
+slug: "jpa"
+---
+
+### JPA란?
+
+Java Persistence API라고한다. 자바 진영의 ORM기술 표준이라고한다.
+
+**그렇다면 ORM은 뭘까?** 
+
+ORM은 **객체(엔티티)와 관계형 데이터베이스를 중간에서 매핑해주는 기술이다.** 객체 지향 프로그래밍에서 사용하는 객체와 관계형 데이터베이스의 테이블 간의 데이터를 변환하는 과정을 자동화해주는 도구라고 할 수 있다고한다. 
+
+* 즉, 개발자는 SQL 쿼리를 직접 작성하지 않고도 ORM을 통해 객체 지향 언어의 객체를 사용하여 데이터베이스 작업을 할 수 있다. 
+
+JPA를 시작하기전 ORM에 대해서도 알아봤다.
+
+테스트를 위해 설정하고 간단하게 코드를 작성했다. 💪🏻
+
+```xml
+<dependency>
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>6.4.2.Final</version>
+</dependency>
+
+<dependency>
+    <groupId>javax.xml.bind</groupId>
+    <artifactId>jaxb-api</artifactId>
+    <version>2.3.1</version>
+</dependency>
+```
+
+```xml
+<persistence-unit name="hello">
+    <properties>
+        <!-- 필수 속성 -->
+        <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
+        <property name="jakarta.persistence.jdbc.user" value="sa"/>
+        <property name="jakarta.persistence.jdbc.password" value=""/>
+        <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:~/test"/>
+        <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+
+        <!-- 옵션 -->
+        <property name="hibernate.show_sql" value="true"/>
+        <property name="hibernate.format_sql" value="true"/>
+        <property name="hibernate.use_sql_comments"  value="true"/>
+        <property name="hibernate.hbm2ddl.auto" value="create" />
+    </properties>
+</persistence-unit>
+
+```
+
+```java
+@Getter
+@Setter
+@Entity
+@NoArgsConstructor
+@AllArgsConstructor
+public class Member {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "MEMBER_ID")
+    private Long id;
+    private String name;
+}
+```
+
+```java
+public static void main(String[] args) {
+  EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+  EntityManager em = emf.createEntityManager();
+
+  EntityTransaction tx = em.getTransaction();
+  
+  tx.begin();
+  Member member = new Member();
+  member.setName("율라프");
+  em.persist(member);
+  tx.commit();
+}
+```
+
+member entity를 생성 후 데이터가 잘 저장되는지 확인해보려고한다. >< 
+
+ 
+
+실행 시켜보니 아래와같이 테이블을 직접 생성하고 Insert 쿼리까지 만들어줘서 데이터 저장까지 해주었다! 
+
+![](/blog/images/jpa-entity-schema.png)
+![](/blog/images/jpa-sql.png)
+
+**어떻게 이렇게 동작할 수 있었을까?🤔**
+
+1. `EntityManagerFactory`는 JPA의 핵심 구성 요소로, 데이터베이스와의 연결 및 엔티티 매핑에 필요한 설정을 관리한다고한다. “hello”는 내가 persistence.xml에 정의한 persistence-unit이름이다. 
+createEntityManagerFactory(”hello”) 메서드는 이 설정을 기반으로 entityManagerFactory를 생성한다.
+1. EntityManager em = emf.createEntityManager(); entityManager는 JPA의 주요 인터페이스이며 데이터베이스와 상호작용을 처리한다고한다. entityManager를 생성해서 entity를 데이터베이스에 저장하거나 조회할 수 있다.
+2. 마지막으로, Member엔티티를 생성해서 name을 지정 후 em.persist를 호출하면 새엔티티 객체를 데이터 베이스에 저장합니다. 
+이때, 중요한 점은 JPA에서 수행되는 변경 작업은 트랜잭션에 의해 실행되어야한다고 한다. 
+
+```java
+tx.begin();
+Member member = new Member();// 엔티티 db에 영속되는 데이터를 표현, 쉽게말해 테이블을 객체로 표현
+member.setName("율라프");
+em.persist(member);
+tx.commit();
+```
+
+간단하게 알아보았고 오늘은 내부 동작 원리와 관련된 내용만 정리하고 끝내려 한다 ☺️
+
+### 내부 동작 원리
+
+entityManager를 통해 영속화 시키면 우선 영속성 컨텍스트라는 하나의 공간이 생겨 1차 캐싱을 한다고 한다.
+
+1차 캐싱과 동시에 CUD 쿼리가 생성되며 SQL 저장소에 쌓아두고,  그 후 트랜잭션 커밋시점에 flush되면서 db저장되고 트랜잭션이 커밋되는 방식이다. 
+
+오늘은 정말 간단하게만 알아보았다!

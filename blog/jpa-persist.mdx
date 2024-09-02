@@ -1,0 +1,99 @@
+---
+title: "JPA 영속성이란?"
+date: "2022-12-10"
+slug: "jpa-persist"
+---
+
+오늘은 JPA에 중요한 영속성에 대해 정리해봐야겠다 
+
+### **영속성**?
+
+데이터를 생성한 프로그램이 종료되어도 사라지지 않는 데이터의 특성을 말한다. 
+
+그렇다면 JPA의 영속성이란? JPA에서 데이터를 관리하고 유지하기 위한 속성이다.
+
+### 영속성 컨텍스트
+
+엔티티를 영구 저장하는 환경이라고한다. 
+
+즉, 논리적인 개념이며 엔티티 매니저를 통해 영속성 컨텍스트에 저장한다. 
+
+영속성 컨텍스트 안에 엔티티의 생명주기는 entityManager에 의해 관리된다. 
+
+### 엔티티의 생명주기
+
+비영속 (new/ transient) - 영속성 컨텍스트와 전혀 관계 없는 새로운 상태
+
+```java
+맴버객체를 생성했다.
+entitymanager에 아무것도 넣지 않은 상태이다.
+
+// 객체 생성 상태 (비영속)
+Member member = new Member();
+member.setId(1L);
+```
+
+영속 (managed) - 영속성 컨텍스트에 저장되어 있는 상태
+
+```java
+// 객체 생성 상태 (비영속)
+Member member = new Member();
+member.setId(1L);
+
+EntityManager em = emf.createEntityManager();
+em.getTransaction().begin();
+//객체를 저장한 상태(영속)
+
+em.persist(member);
+// 엔티티 매니저에 들어가면서 영속성 컨텍스트에 들어가서 관리가된다. 영속 상태가 된다
+```
+
+준영속 (detached) - 영속성 컨텍스트에 저장되어있다가 분리된 상태
+
+```java
+
+Member member = new Member();
+member.setName("율라프");
+em.persist(member);
+
+em.detach() <- 영속성 컨텍스트에서 분리, 준영속
+```
+
+삭제 (removed) - 영속성 컨텍스트에서 삭제된 상태
+
+```java
+Member member = new Member();
+member.setName("율라프");
+em.persist(member);
+
+em.remove(member); <- 영구저장한 db에서 지우겠다!  
+```
+
+### 영속성 컨텍스트의 이점
+
+- 1차 캐시
+    - 영속성 컨텍스트 내부에 존재하고 처음 영속화시키면 1차 캐시에 저장 된다.
+    단, 1차 캐시에 데이터가 없을 때, DB를 조회한다.
+- 동일성(identity) 보장
+    - 1차 캐시가 있기 때문에 같은 식별자(@Id)에 대해 매번 같은 인스턴스에 접근해서 동일성이 보장되는것
+- 트랜잭션을 지원하는 쓰기 지연 (transactional write-behind)
+    - 1차 캐시에 넣고 INSERT SQL을 생성해서 쓰기 지연 SQL 저장소에 쌓아두고,
+    그 후 트랜잭션을 커밋하는 시점에 flush되면서 db로 저장되고 트랜잭션이 커밋된다.
+    
+    ```java
+    EntityManager em = emf.createEntityManager();
+    EntityTransaction tx = em.getTransaction();
+    tx.begin();
+    
+    em.persist(memberA);
+    em.persist(memberB);
+    // insert sql을 db에 보내지 않는다. 
+    
+    //commit하는 순간 db에 INSERT SQL을 보낸다.
+    tx.commit();
+    ```
+    
+- 변경 감지 (diry checking)
+    - 영속 엔티티 조회 이후에 데이터 변경을 하면 자동으로 변경을 감지해서 update쿼리를 데이터베이스에 반영한다.
+- 지연 로딩 (lazy loading)
+    - 연관 관계에 있는 엔티티 객체들은 지연 로딩(Lazy) 설정에 따라 참조될 때 로딩할 수있다.

@@ -1,0 +1,124 @@
+---
+title: "SpringBoot Redis 설정하기"
+date: "2023-02-14"
+slug: "springboot-redis"
+---
+
+운영업무를 진행하면서 redis를 활용해본기억은 있지만 제대로 설정해본적이 없어서 실습을 기반으로 기억하기 위해 남긴다
+
+우선 레디스란? 인메모리 데이터 베이스이며 key-value저장 방식이고, Lists, Sets, Sorted, Sets, Hashes 같은 다양한 저장방식을 제공하며 다양한 방식으로 데이터를 활용할 수 있다고 한다.  
+
+```java
+implementation("org.springframework.boot:spring-boot-starter-data-redis")
+```
+
+```java
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+```
+
+```java
+@Configuration
+@EnableRedisRepositories
+public class RedisConfig {
+
+    @Value("${spring.redis.host}")
+    private String host;
+
+    @Value("${spring.redis.port}")
+    private int port;
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        return new LettuceConnectionFactory(host, port);
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        return redisTemplate;
+    }
+}
+```
+
+여기까지 redis 사용을 위한 기본 configuration이다.
+
+Spring-boot에서 Redis를 사용하는 방법은 RedisTemplate, RedisRepository 2가지다.
+
+두 개다 실습해보기 위해서 아래 설명처럼 설정했다
+
+RedisTemplate을 사용하기 위한 Bean으로 설정
+
+RedisRepository를 사용하기 위한 @EnableRedisRepositories 어노테이션 설정
+
+### RedisTemplate
+```java
+@Service
+@RequiredArgsConstructor
+public class RedisService {
+    private final RedisTemplate<String, Object> redisTemplate;
+    
+    public Long get(final String key) {
+        final Object getResult = redisTemplate.opsForValue().get(key);
+        return Long.valueOf(String.valueOf(getResult));
+    }
+    
+    public void set(final String key, final Long value) {
+        redisTemplate.opsForValue().set(key, value);
+    }
+}
+```
+
+장점: 
+
+- Redis의 모든 유형(문자열, 해시, 리스트, 셋, 소트된 셋 등)에 대해 자유롭게 작업할 수 있도록 도와준다.
+- Redis에 대한 기본적인 CRUD 작업 외에도 복잡한 스크립트 실행이나 트랜잭션 관리 등 고급 기능을 제공한다.
+
+단점 :
+
+- 데이터를 저장하거나 조회하는 과정에서 직접 매핑을 해야 한다.
+
+### RedisReposiroty
+
+```java
+@Getter
+@Builder
+@RedisHash(timeToLive = 1800)
+public class Token {
+
+    @Id
+    private String token;
+
+    private Integer userId;
+
+    private LocalDateTime registeredAt;
+
+}
+ 
+@Id 어노테이션을 적용하면 CrudRepository가 제공하는 findBy 구문을 사용할 수 있다.
+@Id말고도 @Indexed어노테이션을 사용해도 된다.
+```
+
+```java
+public interface TokenRepository extends CrudRepository<Token, UUID> {
+  Optional<Token> findByToken(String token);
+}
+```
+
+장점: 
+
+- 간단하고 쉽게 사용할 수있다. JPA를 활용했던 경험이 있다면 더 쉽게 접근이 가능하다
+
+단점:
+
+- RestTemplate과는 다르게 모든 유형을 지원하지 않아서 한계가 있을 수 있다.
+
+RedisTemplate과 RedisRepository를 사용해봤을 때, RedisRepository가 적용이 간단하다.
+
+적용이 간단해서 그것만 쓰면 안된다. 두 사용법의 장단점을 확인해서 프로젝트의 요구 사항에 따라 적절한 방식을 선택하면 될 것 같다.
