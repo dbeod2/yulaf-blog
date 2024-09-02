@@ -1,0 +1,110 @@
+---
+title: "@Async란?"
+date: "2024-03-30"
+slug: "async"
+---
+회사에서 사용 중이던 등록API가 1초 이상 지연을 발생시켰다. 
+
+왜지?하면서 코드를 확인해보니 외부로 데이터를 보낼 때, 시간이 걸렸던 것이고 심지어 비동기처리가 되어있었다.
+
+근데 너무 이상했다 @Async가 설정되어있는데, 제대로 동작을 안하다니 확인해보자! 라는 마음으로 이제 알아가보기로한다. 
+
+## @Async
+Spring에서 제공하는 스레드 풀을 활용하는 비동기 메소드 지원 어노테이션이다.** 
+
+**스레드 풀은 작업 처리에 사용되는 스레드를 제한된 개수만큼 정해 놓고, 작업 큐에 들어오는 작업들을 하나씩 스레드가 맡아 처리하는 기법이다.*
+
+@Async는 Spring AOP가 적용되어 Spring context에 등록되어 있는 빈 객체의 메서드가 호출되었을 때 끼어들 수 있고 @Async가 적용되어 있다면 메서드를 가로채서 다른 스레드(풀)에서 실행시켜주는 메커니즘이다.
+
+사용 방법은 비동기로 동작해야하는 또는 동작하길 원하는 메서드에 @Async를 붙여주면 된다. 
+
+```java
+@Async
+public void asyncMethodB() {
+    methodB();
+}
+```
+
+이제 @Async를 사용하기 위해 설정 방법과 주의사항 등을 테스트를 해봐야겠다.
+
+**@Async를 사용시 주의사항이 있다.**
+
+1. **동일 클래스에 @Async 사용시 사용이 불가하다 선언 후 호출 클래스에서 호출을 해야한다.** 
+    1. 그 이유는 @Async는 프록시를 통해 메서드를 가로채는데, 동일 클래스 내 호출에서는 프록시 객체가 사용되지 않아서 비동기 호출이 이루어지지 않는다고 한다. 다른 클래스에서 해당 메서드를 호출해야 비동기 처리가 된다고 한다. 
+2. **private method에는 사용이 불가능하다.**  
+    1. 그 이유는 @Async 어노테이션이 적용된 메서드는 프록시를 통해 호출되어야 비동기 처리가 가능한데, private 메서드는 프록시에서 접근할 수 없으므로, @Async를 사용할 경우 반드시 public 접근 제어자로 선언해야한다고 한다. 
+    
+
+주의 사항까지 알아보았고 설정을 해봐야겠다.
+
+excutor를 정의하는 방법이 2가지가 있는데 나는 직접 Bean으로 excutor를 정의했다. 
+
+```java
+@Bean(name = "taskExecutor")
+  public Executor taskExecutor() {
+      ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+      executor.setCorePoolSize(2); // 기본 실행 대기하는 Thread의 수
+      executor.setMaxPoolSize(10); // 동시 동작하는 최대 Thread의 수
+      executor.setQueueCapacity(500);
+      // MaxPoolSize 초과 요청에서 Thread 생성 요청시,
+      // 해당 요청을 Queue에 저장하는데 이때 최대 수용 가능한 Queue의 수,
+      // Queue에 저장되어있다가 Thread에 자리가 생기면 하나씩 빠져나가 동작
+      executor.setThreadNamePrefix("test-"); // 생성되는 Thread 접두사 지정
+      executor.initialize();
+      return executor;
+  }
+```
+
+설정을 끝내고, asyncService, productService 두 서비스를 만들고 callerService에서 호출해보기로한다. 
+
+```java
+@Async
+public void asyncMethodB() {
+    log.info("Async methodB start - thread: " + Thread.currentThread().getName());
+    for (int i = 0; i < 5; i++) {
+        System.out.println("methodB i = " + i + ", threadName = " + Thread.currentThread().getName());
+    }
+    log.info("Async methodB end - thread: " + Thread.currentThread().getName());
+}
+```
+
+```java
+public void methodA() {
+    log.info("Transactional methodA start - thread: " + Thread.currentThread().getName());
+    for (int i = 0; i < 5; i++) {
+        System.out.println("methodA i = " + i + ", threadName = " + Thread.currentThread().getName());
+    }
+    log.info("Transactional methodA end - thread: " + Thread.currentThread().getName());
+}
+```
+
+```java
+public void callAsync() {
+    log.info("callMethods start");
+
+    productService.methodA();
+    asyncService.asyncMethodB();
+
+    log.info("callMethods end");
+}
+```
+
+코드를 호출했을 때 결과는?! 
+
+![log](/blog/images/asyncresult.png)
+
+잘 동작한것 같다. 
+
+메서드 호출이 끝나고도 asyncMethodB메서드가 비동기적으로 실행되었음을 체크할 수 있었다. 
+
+**원인을 찾았다. 
+메서드가 private으로 선언되어있었고, 같은 클래스내에서 호출하고있었다.
+이렇게 하나 더 배워간다!**
+
+
+**참고로**
+스프링에서 @Async기본설정은 SimpleAsyncTaskExecutor이다.
+
+하지만, @SpringBootApplication 어노테이션을 타고 들어가다 보면 @EnableAutoConfiguration어노테이션이 있는데, 스프링부트가 자동으로 config해주는 내용들이있고 그 중 하나가 TaskExecutionAutoConfiguration인데 소스코드를 보면 ThreadPoolTaskExecutor를 TaskExecutor로 사용하는걸 확인할 수 있다. 
+
+결론은 스프링에서의 기본설정은 SimpleAsyncTaskExecutor가 맞고, 스프링부트의 설정이 이를 ThreadPoolTaskExecutor로 변경해주고 있다는 것이다.

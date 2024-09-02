@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Link, graphql } from 'gatsby'
 import * as styles from './blogContentIndex.module.css';
 
-const BlogContentIndex = ({ data }) => {
+const BlogContentIndex = ({ data , pageContext}) => {
     return (
         <ul className={styles.list}>
             {data.allMdx.nodes.map(node => (

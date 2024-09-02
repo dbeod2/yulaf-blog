@@ -13,7 +13,7 @@ const userProfile = () => {
             <br/>yulaf`s record..☃️
             </p>
             <div className={styles.greyRule}/>
-            <h3 className={styles.smallHeading}>쉴 줄아는 율라프 기술 블로그</h3>
+            <h3 className={styles.smallHeading}>생각하자</h3>
             <br/>
 
             <div className={styles.smallPostLink}>

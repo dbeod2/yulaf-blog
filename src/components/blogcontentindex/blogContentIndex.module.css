@@ -1,15 +1,19 @@
 .list {
     margin: 0;
+    display: grid;
+    gap: 5px;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fill, 300px)
 }
 
 .list .listItem {
     list-style: none;
-    margin-top: 10px;
+    margin-left: 10px;
 }
-
+/* 
 .list .listItem:first-child {
-    margin-top: 0;
-}
+    margin-left: 0;
+} */
 
 .postList{
     min-height: 1px;
@@ -22,6 +26,7 @@
 
 .postContent {
     padding: 20px;
+    height: 300px;
 }
 
 .postRow {

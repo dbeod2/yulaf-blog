@@ -7,7 +7,9 @@ import Seo from '../components/seo'
 import UserProfile from '../components/userprofile/userProfile'
 import BlogContentIndex from '../components/blogcontentindex/blogContentIndex'
 
-const IndexPage = ({ data }) => {
+const IndexPage = ({ data, pageContext }) => {
+  const { previous, next } = pageContext;
+
   return (
     <Layout>
       <div className={styles.layoutContentWrapper}>
@@ -17,11 +19,23 @@ const IndexPage = ({ data }) => {
               <UserProfile />
             </div>
             <div className={styles.layoutBlogContentIndexWrapper}>
-                <BlogContentIndex data={ data } />
+                <BlogContentIndex data={data} pageContext={pageContext} />
             </div>
           </div>
         </div>
       </div>
+      <nav>
+        {previous && (
+          <Link to={previous.frontmatter.slug}>
+            ← {previous.frontmatter.title}
+          </Link>
+        )}
+        {next && (
+          <Link to={next.frontmatter.slug}>
+            {next.frontmatter.title} →
+          </Link>
+        )}
+      </nav>
     </Layout>
   )
 }
