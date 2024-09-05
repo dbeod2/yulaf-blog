@@ -22,8 +22,6 @@ slug: "ehcache"
         
         왜냐하면, ehcache가 JVM의 힙 메모리가 아닌 곳(offheap 혹은 disk)에 캐시를 저장하기 위해서는 JVM 메모리에 인스턴스화 되어있는 객체의 데이터를 외부에서 사용할 수 있게 하기 위해 Serialize(직렬화)가 필요하기 때문이다.
         
-        [https://medium.com/finda-tech/spring-로컬-캐시-라이브러리-ehcache-4b5cba8697e0](https://medium.com/finda-tech/spring-%EB%A1%9C%EC%BB%AC-%EC%BA%90%EC%8B%9C-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-ehcache-4b5cba8697e0)
-        
 - Spring 내부에서 동작하며 캐싱을 수행한다고한다.
     
     즉, ehcache인스턴스가 spring application context에 의해 관리되고 spring 생명주기와 통합되어 동작한다는 말이다. 
@@ -35,7 +33,7 @@ slug: "ehcache"
     offheap이란 말 그대로 힙 메모리를 벗어난 메모리이고 GC로 데이터가 정리되지 않는 공간이다.
     
 
-관련된 설정과 테스트는 https://github.com/dbeod2/ehcache-test 깃에 올려놨다.
+관련된 설정과 테스트는 [ehcache](https://github.com/dbeod2/ehcache-test)에 올려놨다.
 
 정말 간단하게 테스트해봤다. 
 
