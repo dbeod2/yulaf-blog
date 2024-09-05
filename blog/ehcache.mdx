@@ -1,0 +1,55 @@
+---
+title: "EhCache?"
+date: "2024-01-30"
+slug: "ehcache"
+---
+
+## 캐시란 ?
+
+동일한 요청이 들어오면 복잡한 작업을 수행해서 결과를 만드는 대신 “**이미 보관된 결과를 바로 돌려주는 방식”**
+
+서비스 운영/개발시에는 반복적으로 동일한 결과를 돌려주는 작업이나 각 작업의 시간이 오래걸리거나 서버에 부담을 주는 경우 사용한다.
+
+## ehcache란?
+
+(로컬 캐시 라이브러리) 
+
+- java기반 오픈 소스 캐시 라이브러리!
+- 3개 스토리지 저장 가능
+    - 메모리 / offHeap / Disk
+- 직렬화된 데이터 객체를 저장하는 메모리블럭
+    - ehcache3은 캐싱 데이터를 외부 메모리에 저장하기 위해서 저장 할 데이터가 serializable이 구현 되어 있어야한다.
+        
+        왜냐하면, ehcache가 JVM의 힙 메모리가 아닌 곳(offheap 혹은 disk)에 캐시를 저장하기 위해서는 JVM 메모리에 인스턴스화 되어있는 객체의 데이터를 외부에서 사용할 수 있게 하기 위해 Serialize(직렬화)가 필요하기 때문이다.
+        
+        [https://medium.com/finda-tech/spring-로컬-캐시-라이브러리-ehcache-4b5cba8697e0](https://medium.com/finda-tech/spring-%EB%A1%9C%EC%BB%AC-%EC%BA%90%EC%8B%9C-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-ehcache-4b5cba8697e0)
+        
+- Spring 내부에서 동작하며 캐싱을 수행한다고한다.
+    
+    즉, ehcache인스턴스가 spring application context에 의해 관리되고 spring 생명주기와 통합되어 동작한다는 말이다. 
+    
+    ehcache를 bean으로 관리하며, DI를 통해 필요한 서비스 클래스에 ehcache 인스턴스를 제공할 수 있다. 
+    
+- 기존 2.x 버전과 달리 3버전에서는 offheap이라는 저장 공간을 제공한다.
+    
+    offheap이란 말 그대로 힙 메모리를 벗어난 메모리이고 GC로 데이터가 정리되지 않는 공간이다.
+    
+
+관련된 설정과 테스트는 https://github.com/dbeod2/ehcache-test 깃에 올려놨다.
+
+정말 간단하게 테스트해봤다. 
+
+ehcache설정하면서 설정 후 애플리케이션 실행시 ehcache.xml을 못찾는다는 오류가 발생했다.
+
+javax.xml.bind.ValidationEventHandler와 관련된 클래스를 찾을 수 없다고 발생했고 종종 java11에서 발생하는 문제라고한다. 
+
+해결방법은 JAXB의존성을 추가하면 사용하면된다.
+
+```java
+dependencies {
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+}
+```
+
+나도 따로 의존성을 추가해서 사용하였다.
