@@ -1,0 +1,104 @@
+---
+title: "스프링과 싱글톤"
+date: "2022-03-31"
+slug: "springandsingleton"
+---
+
+스프링 프레임워크에서의 싱글톤은 기본적으로 빈(Bean) 스코프의 하나로, 컨테이너가 관리하는 빈의 인스턴스가 오직 하나만 생성되는 것을 의미한다.
+
+즉, 스프링 컨테이너가 시작될 때 해당 빈의 인스턴스가 생성되고, 이후 모든 요청이 동일한 인스턴스를 사용하게 되는것을 말한다. 
+
+### 싱글톤
+
+**싱글톤 패턴**
+
+클래스의 인스턴스가 딱 1개만 생성되는 것을 보장하는 디자인 패턴이다. 
+
+static영역 객체에 instance를 미리 하나 생성해서 올려둔다. 
+
+필요하면 오직 getInstance메서드를 통해서만 조회할 수 있다.
+
+인스턴스만 존재해야하므로 생성자를 private으로 막아서 혹시라도 외부에서 new 키워드로 객체인스턴스가 생성되는 것을 막는다. 
+
+**싱글톤 컨테이너 적용** 
+
+이미 만들어진 객체를 공유해서 효율적으로 재사용할수있다.
+
+스프링의 기본 빈 등록 방식은 싱글톤이지만 싱글톤만 지원하는건 아니다. 요청할때마다 새로운 객체를 생성해서 반환하는 기능도 제공한다.
+
+**싱글톤 방식의 주의점 😅**
+
+여러 클라이언트가 **하나의 인스턴스를 공유하기때문에 무상태로 설계**해야한다.
+
+특정 클라이언트에 의존적인 필드가 있으면 안된다.
+
+값을 변경할수있는 필드가 있으면 안된다.
+
+**읽기만 가능해야한다.**
+
+공유값을 설정하면 장애가 발생할수있다.
+
+**@Configuration과 싱글톤**
+
+@Configuration은 싱글톤을 위해 존재한다.
+
+@Configuration없이 @Bean만 선언시 스프링 빈으로 등록되지만 싱글톤 보장하지 않는다. 
+
+설정 정보는 항상 선언해줘야한다. 
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public SingletonService singletonService() {
+        return SingletonService.getInstance();
+    }
+}
+```
+
+싱글톤 클래스 정의
+
+```java
+public class SingletonService {
+    private static SingletonService instance;
+
+    private SingletonService() {}
+
+    public static SingletonService getInstance() {
+        if (instance == null) {
+            synchronized (SingletonService.class) {
+                if (instance == null) {
+                    instance = new SingletonService();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+스프링 애플리케이션에서 싱글톤 빈을 사용해봤다. 
+
+```java
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class SingletonExample {
+
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        // SingletonService 빈을 가져옴
+        SingletonService service1 = context.getBean(SingletonService.class);
+        SingletonService service2 = context.getBean(SingletonService.class);
+
+        // 같은 인스턴스가 반환됨을 확인
+        System.out.println("service1 == service2 : " + (service1 == service2));
+    }
+}
+
+```
