@@ -25,7 +25,6 @@ const userProfile = () => {
             <br/>
             <p className={styles.github}>
             
-              <a href="https://github.com/dbeod2">yura`s github link</a>
             </p>
         </div>
     </div>
