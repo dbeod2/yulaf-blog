@@ -1,0 +1,496 @@
+---
+title: "이펙티브자바 2장 객체 생성과 파괴"
+date: "2024-10-03"
+slug: "effective-java-2"
+---
+이펙티브 자바 2장을 읽고 정리해둔다.
+
+**우선 이번 주제에서 다룰 내용의 주요 핵심은 아래와 같다.**
+
+1. **객체를 만들어야 할 때와 만들지 말아야 할때를 구분하는 법**
+2. **올바른 객체 생성 방법**
+3. **불필요한 생성을 피하는 방법**
+4. **객체를 제때 파괴시키는 방법**
+5. **파괴 전에 수행해야 할 정리 작업을 관라하는 방법** 
+
+핵심을 기억하면서 다음 내용들을 정리해보겠다. 
+
+# item 1. 생성자 대신 정적 팩터리 메서드를 고려하라
+
+public 생성자를 사용해서 객체를 생성하는 방법말고 static factory 메서드를 사용해서 만드는 방법도 있다. 
+
+이 방법에 대해서 소개한다. 
+
+**들어가기 앞서 생성자는 무엇이고 정적 팩터리 메서드는 무엇인가?**
+
+생성자는 객체 생성시 호출하는 메서드이다. 
+
+그렇다면? **생성자의 특징**은 뭘까? 
+
+1. 객체의 초기화역할을 한다.
+2. 클래스이름과 동일해야 한다.
+3. 객체 생성시 생성자를 선언하지 않는다면 컴파일러가 자동으로 기본 생성자를 생성 또는 주입한다.
+4. 시그니처가 동일한 생성자를 만들 수 없다. 즉, 매개변수 구성이 같은 생성자는 1개 이상 만들 수 없다.
+
+```java
+public class Cup {
+	private String type;
+	private String name;
+	
+	public Cup() {
+	}
+	
+	public Cup(String type) {
+		this.type = type;
+	} 
+	
+	public Cup(String name) {
+		this.name = name;
+	} // 매개변수 구성이 같아서 만들 수 없음. 
+}
+
+public class CupMain {
+	public static void main(String[] args) {
+	  Cup cup = new Cup();
+		Cup cup = new Cup("type");
+	}
+}
+```
+
+생성자의 특징에 대해서 알아보았다. 그렇다면 **정적 팩토리 메서드란 무엇**일까? 
+
+객체의 생성을 담당하는 클래스 메서드라고 한다. 
+
+여기서 팩토리는 객체 생성을 단순화하고, 생성 로직을 쉽게 관리할 수있도록 도와준다고 한다. 
+
+그럼, 정적 팩토리 메서드의 장단점을 알아보자! 
+
+1. 이름을 가질 수 있다 .
+    1. 생성자는 클래스와 동일한 이름을 가져야하지만, 정적 팩토리 메서드는 이름을 가질 수 있다.
+    2. 또한, 매개변수 구성이 같은 생성자는 1개 이상 만들 수 있다. 
+    
+    ```java
+    public class Cup {
+    
+    	private String types;
+    	private String pattern;
+    
+    	public static Cup ofTypes(String types) {
+    			Cup cup = new Cup();
+    			cup.types = types;
+    	    return cup;
+    	}
+    	
+    	public static Cup ofPattern(String pattern) {
+    			Cup cup = new Cup();
+    			cup.pattern = pattern;
+    	    return cup;
+    	}
+    }
+    
+    public class CupMain {
+    	public static void main(String[] args) {
+    	  Cup cupOfType = Cup.ofTypes("Goblet");
+    	  Cup cupOfPattern = Cup.ofPattern("dot");
+    	}  
+    	
+    }
+    ```
+    
+2. 호출될 때마다 인스턴스를 새로 생성하지 않아도 된다. 
+    1. 싱글턴 패턴과 Map을 사용해 값을 저장해두고 가져오는 방식을 통해 매번 객체를 새로 생성할 필요 없이, 미리 만들어둔 객체나 캐시된 객체를 반환하는 방식이다.
+    
+    ```java
+    import java.util.HashMap;
+    import java.util.Map;
+    
+    public class CupFactory {
+        // 객체를 캐싱할 Map
+        private static final Map<String, Cup> cupCache = new HashMap<>();
+    
+        // 정적 팩토리 메서드: 캐시된 객체가 있으면 반환, 없으면 생성 후 캐싱
+        public static Cup getCupTypes(String types) {
+            return cupCache.computeIfAbsent(types, Cup::new);
+        }
+    }
+    ```
+    
+3. 반환 타입의 하위 타입 객체를 반환할 수 있다.
+    1. 상속 관계일 때, 정적 팩토리 메서드를 사용하면 상황에 따라 상위 타입을 반환하더라도 하위 타입 객체를 반환할 수 있다.
+    
+    ```java
+    // 상위 클래스
+    public class CupFactory {
+    
+        public static CupFactory createCup(String type) {
+            if ("Coffee".equalsIgnoreCase(type)) {
+                return new CoffeeCup();
+            }
+            if ("Tea".equalsIgnoreCase(type)) {
+                return new TeaCup();
+            }
+           
+            return new Cup();
+        }
+    }
+    
+    // 하위 클래스들
+    class CoffeeCup extends CupFactory {
+      
+    }
+    
+    class TeaCup extends CupFactory {
+    
+    }
+    
+    class Cup extends CupFactory {
+    }
+    
+    public class Main {
+        public static void main(String[] args) {
+            CupFactory coffeeCup = CupFactory.createCup("Coffee");
+            CupFactory teaCup = CupFactory.createCup("Tea");
+            CupFactory defaultCup = CupFactory.createCup("Unknown");
+        }
+    }
+    ```
+    
+4. 입력 매개변수에 따라 매번 다른 클래스의 객체를 반환할 수 있다.  
+    1. **반환 타입의 하위 타입 객체를 반환할 수 있다** 와 같은 맥락이지만 이부분은 특정 조건에 따라 달라질 수 있다고 한다.?
+5. 정적 팩터리 메서드를 작성하는 시점에는 반환 할 객체의 클래스가 존재하지 않아도된다.
+
+장점은 알아보았으니 단점도 알아봐야한다. 
+
+1. 상속을 하려면 public이나 protected생성자가 필요하니 정적 팩터리 메서드만 제공하면 하위 클래스를 만들 수없다. 
+    1. 정적 팩터리 메서드에서 말하는 **반환 타입의 하위 타입 객체를 반환할 수 있다 와 입력 매개변수에 따라 매번 다른 클래스의 객체를 반환할 수 있다를 하려면** 생성자를 private으로 선언할 수없다.
+2. 정적 팩터리 메서드는 프로그래머가 찾기 어렵다. 
+    1. 정적 팩터리 메서드는 별다른 제약 조건이 없어 일반 메서드와 구별하기 쉽지않다. 
+
+# item2. 생성자에 매개변수가 많다면 빌드를 고려하라
+
+개발을 하다보면 객체 내 필드가 많은 경우 매개변수가 많아져서 복잡성이 증가할 때가 많다. 
+
+단순 복잡성 뿐 아니라 매개변수의 자료형이 동일한 경우 데이터를 잘못 전달하는 불상사도 발생할수도 있다.
+
+이러한 부분들을 고려해 매개변수가 많은 경우 빌더 패턴을 선택하는게 낫다고 설명한다. 
+
+빌더 패턴을 사용하면 필요한 객체를 직접 만드는 대신, 필수 매개변수만으로 생성자(혹은 정적 팩터리)를 호출해 빌더 객체를 얻는다. 
+
+그래서 빌더 패턴이 뭘까?  
+
+매개변수가 많고 복잡한 객체 생성 문제를 해결하기 위한 패턴이라고한다. 
+
+핵심은 **객체를 구성하는 과정에서 명확하게 각 필드를 지정** 할 수 있도록하고, 최종적으로 **완성된 객체**를 반환한다.
+
+메서드 체이닝 방식을 사용해서 코드의 명확성과 유지보수성을 높일 수 있다. 
+
+장점은 점층적 생성자 패턴처럼 객체 안정성이 있다. 
+
+단점은 빌더에 대한 코드를 따로 작성해야한다. 매개변수가 4개 이상일 때 그효과가 좋다.! 
+
+```java
+public class Animal {
+		private String type;
+    private String name;
+    private String color;
+    private String gender;
+    private int age;
+    private String point;
+
+    // 매개변수가 많은 생성자 
+    public Animal(String type, String name, String color, String gender, int age, String point) {
+        this.type = type;
+        this.name = name;
+        this.color = color;
+        this.gender = gender;
+        this.age = age;
+        this.point = point;
+    }
+
+    public static class Builder {
+		    private String type;
+        private String name;
+        private String color;
+        private String gender;
+        private int age;
+        private String point;
+
+        //필수 매개변수
+        public Builder(String name, String type) {
+		        this.type = type;
+            this.name = name;
+        }
+
+        public Builder color(String val) {
+            color = val;
+            return this;
+        }
+
+        public Builder gender(String val) {
+            gender = val;
+            return this;
+        }
+
+        public Builder age(int val) {
+            age = val;
+            return this;
+        }
+
+        public Builder point(String val) {
+            point = val;
+            return this;
+        }
+
+        public Animal build() {
+            return new Animal(this);
+        }
+    }
+
+    private Animal(Builder builder) {
+        name = builder.name;
+        color = builder.color;
+        gender = builder.gender;
+        age = builder.age;
+        point = builder.point;
+    }
+}
+
+public class AnimalMain {
+	public static void main (String[] args) {
+    Animal animal = new Animal.Builder("kiki", "puppy")
+                .color("white")
+                .gender("female")
+                .age(1)
+                .point("cute")
+                .build();
+	}
+}
+```
+
+# item3. private 생성자나 열거 타입으로 싱글턴임을 보증하라
+
+싱글턴 패턴을 구현 할 때 private 생성자를 사용하거나 enum타입을 활용해 유일한 인스턴스를 제공하는 방식으로 싱글턴을 보장하라는 말이다. 
+
+1. public static 멤버가 final 필드인 방식을 살펴본다.
+    1. 예시와 같이 인스턴스를 선언해두면 초기화할 때 딱 한번만 호출된다. 예제를 보면 생성자는 private으로 선언하여 새로운 객체 생성을 차단하여 인스턴스가 하나뿐임을 보장한다. 
+    2. 해당 클래스가 싱글턴임을 api에 명백히 드러난다. public static 필드가 final이니 절대로 다른 객체를 참조할 수 없다. 
+
+```java
+public class Elvis {
+	public static final Elvis INSTANCE = new Elvis();
+	private Elvis() {...}
+	
+	public void leaveTheBuilding() {...}
+}
+```
+
+1. 정적 팩터리 메서드를 public static 멤버로 제공한다.
+    1. 1번과 다르게 정적 팩터리 메서드를 public static 멤버로 제공하므로써 항상 같은 객체의 참조를 반환하게된다. 이렇게 된다면 제2의 elvis인스턴스는 만들어 지지않는다. 
+
+```java
+public class Elvis {
+	private static final Elvis INSTANCE = new Elvis();
+	private Elvis() {...}
+	public static Elvis getInstance {
+		return INSTANCE;
+	}
+	public void leaveTheBuilding() {...}
+}
+```
+
+1. 원소가 하나인 열거 타입을 선언하는 것이다.
+    1. public 필드 방식과 비슷하지만 더 간결하고 직렬화할 수있다. 복잡한 직렬화 상황이나 리플렉션 공격에서도 제2의 인스턴스가 생기는일을 막아준다. 
+    2. 대부분 상황에서는 원소가 하나뿐인 열거타입이 싱글턴을 만드는 가장 좋은 방법이다.  단, 만들려는 싱글턴이 enum외의 클래스를 상속해야 한다면 이 방법은 사용 불가다. 
+
+```java
+	public enum Elvis {
+		INSTANCE;
+		
+		public void leaveTheBuilding() {...}
+	}
+```
+
+# item4. 인스턴스화를 막으려거든 private 생성자를 사용하라
+
+클래스의 인스턴스를 외부에서 생성하지 못하도록 막고싶을 때, 그 클래스의 생성자를 private으로 선언하라라는 의미이다. private으로 선언하면 외부에서 객체 생성을 차단하기 때문이다. 
+
+```java
+public class Utils {
+    
+    // private 생성자: 외부에서 객체 생성을 막음
+    private Utils() {
+        throw new AssertionError("인스턴스화 할 수 없습니다.");
+    }
+
+    // 정적 메서드
+    public static int add(int a, int b) {
+        return a + b;
+    }
+}
+
+public static void main(String[] args) {
+        // 정적 메서드를 호출하여 사용
+        int result = Utils.add(5, 3);
+        System.out.println(result);
+
+				Utils utils = new Utils(); // 컴파일 에러 또는 런타임 에러발생 
+ }
+```
+
+# item5. 자원을 직접 명시하지 말고 의존 객체 주입을 사용하라
+
+클래스가 내부적으로 하나이상의 자원에 의존하고 그 자원이 클래스 동작에 영향을 준다면 싱글턴과 정적 유틸리티 클래스는 사용하지 않는 것이 좋으며 직접 만들게 해서도 안된다. 이런 부분들을 대신해 인스턴스를 생성할 때 생성자에 필요한 자원을 넘겨주는 방식으로 의존 객체 주입을 사용하라는 것이다.
+
+**의존 객체 주입은 클래스의 유연성, 재사용성, 테스트 용이성을 개선해준다. 또한 불변을 보장한다.** 
+
+불변을 보장한다는 것은 인스턴스 생성 후 종료까지 변경되지 않는다는 것이다. 
+
+```java
+public class SpellChecker {
+	private final Lexicon dictionary;
+	
+	public SpellChecker(Lexicon dictionary) {
+		this.dictionary = dictionary;
+	}
+}
+```
+
+# item6. 불필요한 객체 생성을 피하라
+
+똑같은 기능의 객체를 매번 생성하기보다는 객체 하나를 재사용하라는 것이다. 
+
+책에서도 예시로 나와 있듯이, 많은 개발자들이 String s = "hi";와 같이 **문자열 리터럴**을 선언하는 방식을 자주 사용한다. 이 방식은 **자바의 문자열 풀(String Pool)**을 활용하여, 같은 문자열 리터럴이 있을 경우 **기존의 객체를 재사용**한다.
+
+하지만 만약 String s = new String("hi");와 같이 **생성자**를 이용해 문자열 객체를 생성한다면, 실행될 때마다 새로운 인스턴스가 만들어진다. 이렇게 하면 **같은 값을 가진 객체가 계속해서 중복 생성**되며, **메모리 낭비**가 발생할 수 있다.
+
+객체를 생성하는 데는 **비용**이 따르며, **재사용하는 것이 훨씬 효율적**이다. 특히, 같은 객체를 여러 번 생성하게 되면 메모리 사용량이 증가하고, GC가 자주 발생하여 **시스템 성능 저하**로 이어질 수 있다.
+
+따라서 불필요하게 같은 기능의 객체를 반복해서 생성하는 것보다, **이미 존재하는 객체를 재사용**하는 것이 **성능 최적화**와 **메모리 절약**에 매우 중요하다.
+
+# item7. 다 쓴 객체 참조를 해제하라
+
+사용이 끝난 객체를 더이 상 참조하지 않도록 하여, 불필요한 메모리를 차지하는 상황을 방지하라는 것이다. 
+
+여기서 말하는 메모리 3명의 누수범이 있다.
+
+1. 객체
+2. 캐시 
+3. 리스너 혹은 콜백 
+
+짧게 알아보도록 하자. 
+
+1. 객체는 사용 후 다 쓴 참조는 null로 참조 해제 한다.
+    - 이 코드를 보면 사용후 바로 리턴을 해준다. 다 쓴 참조를 해지하지 않아 메모리 누수가 발생할 가능성이 크다.
+        
+        ```java
+        private Object[] elements;
+        
+        public Object pop() {
+            if (size == 0)
+                throw new EmptyStackException();
+            return elements[--size];
+        }
+        ```
+        
+    - 이를 해결하기 위해 아래와 같이 사용 후 null을 해주며 참조를 해제한다.
+        
+        ```java
+        public Object pop() {
+            if (size == 0)
+                throw new EmptyStackException();
+            Object result = elements[--size];
+            elements[size] = null;
+            return result;
+        }
+        ```
+        
+    
+    하지만, 다 쓴 참조를 해제하는 가장 좋은 방법은 그 참조를 담은 변수를 유효범위 밖으로 밀어내는 것이라고 한다. 
+    
+2. 캐시는 weakHashMap을 사용하여 메모리 누수를 방지한다.
+    1. 우선 weakHashMap은 키에 대한 참조가 약(weak)한 형태를 말하며, GC가 키에 대한 강한 참조가 없으면 해당 객체를 메모리에서 제거할 수있도록 설계되었다. 즉, 캐시의 키가 더 이상 필요하지 않으면 weakHashMap은 자동으로 해당 항목을 제거한다.
+        
+        ```java
+        public class WeakHashMapEx{
+        	public static void main (String[] args) {
+        		Map<Object, String> cache = new WeakHashMap<>();
+        		Object key1 = new Object();
+            cache.put(key1, "cache1");
+        
+        		Object key2 = new Object();
+            cache.put(key2, "cache2");
+            
+            key1 = null; //참조 제거 
+            ...
+        	}
+        }
+        ```
+        
+3. 리스너 (Listener) 혹은 콜백 (Callback) 이라고 불리는 것은,
+
+클라이언트가 등록 및 사용하고 난 후에 명확히 해지하지 않는다면 계속해서 쌓여간다.
+
+이럴 경우, 콜백을 약한 참조 (weak reference)로 저장하면 가비지 컬렉터가 즉시 수거해갈 수 있다.
+
+그 대표적인 예시가 바로 앞서 한번 말했던 **WeakHashMap** 이다.
+
+# item8. finalizer와 cleaner사용을 피하라
+
+finalizer와 cleaner 둘 다 자바에서 객체 소멸자를 제공한다.  
+
+그 중 finalizer는 예측할 수없고 상황에 따라 위험할 수 있어 일반적으로 불필요하다고한다.
+
+또한 cleaner는 finalizer보다 덜 위험하지만, 여전히 예측할 수없고, 느리고, 일반적으로 불필요하다.
+
+이런 사유 말고 쓰임새가 있지만 기본적으로 쓰지말아야한다는 말이다. 
+
+그이유가 뭘까? 
+
+1. finalizer와 cleaner는 즉시 수행된다는 보장이 없다. (제때 실행되어야 하는 작업은 할 수없다.)
+2. 클래스에 finalizer를 달아두면 그 인스턴스의 자원 회수가 지연될 수있다.
+    1. 애플리케이션이 죽는 시점에 수천개의 finalizer 대기열에서 회수되가만을 기다린다고한다. 
+    2. 문제를 예방하려면 사용하지 않는 방법뿐이다. 
+3. cleaner는 자신을 수행할 스레드를 제어할 수있기는하지만 여전히 백그라운드에서 수행되며 GC의 통제하에 있어서 즉각 수행된다는 보장은 못한다. 
+4. finalizer와 cleaner는 심각한 성능 문제도 동반한다.
+5. finalizer를 사용한 클래스는 finalizer공격에 노출되어 심각한 보안문제를 일으킬 수도 있다.
+
+이런 이유들이 있다고하는데, finalizer와 cleaner는 어디에 사용되는걸까? 
+
+1. 자원의 소유자가 close메서드를 호출하지 않는 것에 대비한 안전망 역할
+    1. cleaner나 finalizer가 즉시 호출되는 보장은 없지만, 클라이언트에서 하지 않은 자원 회수를 늦게라도 해주는 것이 아예 안하는것보다 낫다.
+2. 네이티브 피어와 연결된 객체에서이다. 
+    1. 네이티브 피어란 일반 자바 객체가 네이티브 메서드를 통해 기능을 위임한 네이티브 객체를 말한다?
+    2. 네이티브 피어는 자바 객체가 아니라서 GC는 존재를 알지못한다. 그결과 자바 피어를 회수라 때 네이티브 객체까지 회수를 못해서 cleaner나 finlizer가 나서서 처리하기에 적당한 작업이다.
+    
+
+결론, cleaner(java 8 → finalizer)는 안전망 역할이나 중요하지 않은 네이티브 자원회수용으로만 사용하자!
+
+# item9. try-finally보다 try-with-resources를 사용하라
+
+자바 라이브러리에서 사용되는 자원들 중 직접 닫아줘야 하는 자원이 많은데, 자원 닫기를 놓치는 경우가 있어서 try-with-resources를 활용하여 **자원을 자동으로 해제**할 수 있도록 사용하라는 말이다.
+
+1. try-finally로 자원을 해제하는 방법이다. 
+    1. 자원 사용 후 fis.close();로 해제를 하는데, 대부분 저부분을 놓치는 경우가 있다. 나또한 그랬다.
+    이런 경우 메모리가 낭비되어 성능 저하에 영향을 줄수있다.
+
+```java
+import java.io.*;
+
+try {
+    FileInputStream fis = new FileInputStream("example.txt");
+} finally {
+    fis.close();
+}
+```
+
+1. try-with-resources로 자원을 해제하는 방법이다.
+    1. try-with-resources을 사용하면 try블록이 종료될때 자동으로 자원을 해제한다. 
+    finally블록을 명시적으로 작성할 필요가 없다. 또한, 자원 해제 과정에서 발생하는 예외 처리도 관리해준다.
+
+```java
+try (FileInputStream fis = new FileInputStream("example.txt")) {
+    // 파일 작업 수행
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
