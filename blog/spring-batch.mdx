@@ -10,7 +10,7 @@ slug: "spring-batch-chunk"
 
 Job은 Step들을 순차적으로 수행하게되는데 , Step은 주로 tasklet과 chunk방식이 존재한다고 한다.
 
-![](/blog/images/step.png)
+![step](/images/step.png)
 
 ### Tasklet
 
@@ -20,7 +20,7 @@ Tasklet인터페이스는 execute 단일 메서드를 제공한다.
 
 또한, step내에서 구성되고 실행되는 도메인 객체로 단일 task를 수행하기 위해 사용된다.
 
-![](/blog/images/tasklet.png)
+![tasklet](/images/tasklet.png)
 
 ### Chunk
 
@@ -34,10 +34,14 @@ reader와 processor에서는 1건씩 다뤄지고 writer에선 chunk 단위로 �
 
 예를 들면 , pagesize가 4이고 chunk size가 10일때, chunk 만큼 채워지고 2개가 남게되면 다음 chunk 한테 맡기고 다음 프로세스로 넘어가는 방식이다. 
 
-![](/blog/images/chunk.png)
+![chunk](/images/chunk.png)
 
 
 **트랜잭션 단위를 청크(Chunk) 단위로 관리**하는 이유는 뭘까?
 찾아보니 효율적인 데이터 처리와 안정적인 트랜잭션 관리를 통해 성능을 최적화하고 시스템의 안정성을 보장하기 위해서라고한다.
 
 쉽게말하면 청크 단위로 트랜잭션을 관리함으로써, 하나의 트랜잭션에서 처리되는 데이터의 양이 줄어들고, 이로 인해 트랜잭션 롤백 시 영향이 제한되며, 특정 청크에서 오류가 발생해도 전체 배치 작업에 영향을 미치지 않는것이다.
+
+**Reference** 
+
+[spring batch 가이드 - 기억보단 기록을](https://jojoldu.tistory.com/324) 

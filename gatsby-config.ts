@@ -42,6 +42,12 @@ const config: GatsbyConfig = {
               noInlineHighlight: false,
             },
           },
+          {
+            resolve: `gatsby-remark-images`,
+            options: {
+                maxWidth: 590,
+            },
+          },
         ],
       },
     },

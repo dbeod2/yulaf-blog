@@ -15,7 +15,7 @@ slug: "circuit-breaker"
 
 이런 원리로 circuit breaker가 동작한다. 
 
-![resilience4j 이미지](/blog/images/circuit.png)
+![resilience4j 이미지](/images/circuit.png)
 
 circuit breaker는 **closed, open, half_open** 상태가 존재하여 총 3가지 상태가 있다.
 closed는 요청의 실패율이 설정한 실패 임계치보다 낮은 상태이며, 서비스에 정상적으로 모든 요청이 처리된다.
@@ -63,4 +63,4 @@ fallback method로 서킷 상태를 알수없다.
 
 Netflix hystrix는 github readme를 보면 추가 개발이 없고 유지보수 모드로 Resilience4j를 선택하게되었다! 
 
-https://resilience4j.readme.io/docs/circuitbreaker#count-based-sliding-window를 참고하였다. 
+[resilience 공식문서](https://resilience4j.readme.io/docs/circuitbreaker#count-based-sliding-window)를 참고하였다. 
